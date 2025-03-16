@@ -23,6 +23,18 @@ def get_next_word_packet(s):
     global packet_buffer
 
     # TODO -- Write me!
+    while True:
+        if len(packet_buffer) > WORD_LEN_SIZE:
+            n = int.from_bytes(packet_buffer[:WORD_LEN_SIZE], "big")
+            if len(packet_buffer) >= n + WORD_LEN_SIZE:
+                packet = packet_buffer[:n+WORD_LEN_SIZE]
+                packet_buffer = packet_buffer[n+WORD_LEN_SIZE:]
+                return packet
+
+        data = s.recv(1)
+        if len(data) == 0:
+            return None
+        packet_buffer = packet_buffer + data
 
 
 def extract_word(word_packet):
@@ -36,6 +48,8 @@ def extract_word(word_packet):
     """
 
     # TODO -- Write me!
+    word = word_packet[WORD_LEN_SIZE:].decode()
+    return word 
 
 # Do not modify:
 
