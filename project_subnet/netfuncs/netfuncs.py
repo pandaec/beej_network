@@ -15,8 +15,8 @@ def ipv4_to_value(ipv4_addr):
     return:    16909060  (Which is 0x01020304 hex)
     """
 
-    # TODO -- write me!
-    pass
+    a = [int(x) for x in ipv4_addr.split(".")]
+    return (a[0] << 24) | (a[1] << 16) | (a[2] << 8) | a[3]
 
 def value_to_ipv4(addr):
     """
@@ -34,8 +34,11 @@ def value_to_ipv4(addr):
     return: "1.2.3.4"
     """
 
-    # TODO -- write me!
-    pass
+    a = addr >> 24 & 0xff
+    b = addr >> 16 & 0xff
+    c = addr >> 8 & 0xff
+    d = addr & 0xff
+    return f"{a}.{b}.{c}.{d}"
 
 def get_subnet_mask_value(slash):
     """
@@ -56,9 +59,10 @@ def get_subnet_mask_value(slash):
     return: 0xfffffe00 0b11111111111111111111111000000000 4294966784
     """
 
-    # TODO -- write me!
-    pass
-
+    mask = 32 - int(slash.split("/")[1])
+    full = (1 << 32) - 1
+    host = (1 << mask) - 1
+    return full - host
 def ips_same_subnet(ip1, ip2, slash):
     """
     Given two dots-and-numbers IP addresses and a subnet mask in slash
@@ -86,8 +90,10 @@ def ips_same_subnet(ip1, ip2, slash):
     return: False
     """
 
-    # TODO -- write me!
-    pass
+    a = ipv4_to_value(ip1)
+    b = ipv4_to_value(ip2)
+    mask = get_subnet_mask_value(slash)
+    return a & mask == b & mask
 
 def get_network(ip_value, netmask):
     """
@@ -99,9 +105,7 @@ def get_network(ip_value, netmask):
     netmask:  0xffffff00
     return:   0x01020300
     """
-
-    # TODO -- write me!
-    pass
+    return ip_value & netmask
 
 def find_router_for_ip(routers, ip):
     """
@@ -142,8 +146,11 @@ def find_router_for_ip(routers, ip):
     return: None
     """
 
-    # TODO -- write me!
-    pass
+    for k, v in routers.items():
+        router_mask = v['netmask']
+        if ips_same_subnet(ip, k, router_mask):
+            return k
+    return None
 
 # Uncomment this code to have it run instead of the real main.
 # Be sure to comment it back out before you submit!
@@ -153,9 +160,16 @@ def my_tests():
     print("This is the result of my custom tests")
     print("-------------------------------------")
 
-    print(x)
-
     # Add custom test code here
+    assert ipv4_to_value("255.255.0.0") == 4294901760
+    assert ipv4_to_value("1.2.3.4") == 16909060
+    assert value_to_ipv4(0xffff0000) == "255.255.0.0"
+    assert value_to_ipv4(0x01020304) == "1.2.3.4"
+    assert get_subnet_mask_value("/16") == 0xffff0000
+    assert get_subnet_mask_value("10.20.30.40/23") == 0xfffffe00
+    assert ips_same_subnet("10.23.121.17", "10.23.121.225", "/23")
+    assert not ips_same_subnet("10.23.230.22", "10.24.121.225", "/23")
+    assert get_network(0x01020304, 0xffffff00) == 0x01020300
 """
 
 ## -------------------------------------------
