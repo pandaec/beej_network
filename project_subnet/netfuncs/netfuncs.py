@@ -59,10 +59,10 @@ def get_subnet_mask_value(slash):
     return: 0xfffffe00 0b11111111111111111111111000000000 4294966784
     """
 
-    mask = 32 - int(slash.split("/")[1])
-    full = (1 << 32) - 1
-    host = (1 << mask) - 1
-    return full - host
+    prefix_length = int(slash.split("/")[1])
+    mask = (0xFFFFFFFF << (32 - prefix_length)) & 0xFFFFFFFF
+    return mask
+
 def ips_same_subnet(ip1, ip2, slash):
     """
     Given two dots-and-numbers IP addresses and a subnet mask in slash
