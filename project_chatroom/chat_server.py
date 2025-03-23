@@ -33,30 +33,24 @@ def run_server(port):
                 else:
                     data = r.recv(1024)
                     if len(data) == 0:
-                        print(f"{connection_info}: disconnected")
-                        read_set.remove(r)
-                        write_set.remove(r)
-                        del so_info[so]
+                        close_socket(r)
                     else:
                         print(f"{connection_info}: {data}")
                         read_buffer[r] += data
                         handle_packets(r)
             except socket.error as e:
-                boardcast_packet({"type": "leave", "nick": so_info[r]["nick"]})
-                remove_socket(r)
+                close_socket(r)
                 continue
 
         for w in write:
             try:
                 if w in write_buffer:
-                    # Race condition here
                     buf = write_buffer[w]
                     if len(buf) > 0:
                         w.sendall(buf)
                         write_buffer[w] = b''
             except socket.error as e:
-                boardcast_packet({"type": "leave", "nick": so_info[w]["nick"]})
-                remove_socket(w)
+                close_socket(w)
                 continue
                     
 
@@ -98,12 +92,17 @@ def boardcast_packet(msg, skip={}):
         buf += data
         write_buffer[so] = buf
 
-def remove_socket(so):
+def close_socket(so):
+    boardcast_packet({"type": "leave", "nick": so_info[so]["nick"]})
     read_set.remove(so)
     write_set.remove(so)
     del read_buffer[so]
     del write_buffer[so]
     del so_info[so]
+    try:
+        so.close()
+    except socket.error:
+        pass
 
 def usage():
     print("usage: chat_server.py port", file=sys.stderr)
